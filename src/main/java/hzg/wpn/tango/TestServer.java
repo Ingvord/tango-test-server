@@ -115,4 +115,13 @@ public class TestServer {
     public void setState(DeviceState newState) {
         state = newState;
     }
+
+    @Init
+    @StateMachine(endState = DeviceState.ON)
+    public void init() {
+        aDouble = 100.0D;
+        aFloat = 50.0F;
+        aLong = 1000;
+        anInt = 10;
+    }
 }
