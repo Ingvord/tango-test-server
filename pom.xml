@@ -18,4 +18,8 @@
         <scm.developerConnection>${scm.developerConnection.prefix}${scm.project.name}</scm.developerConnection>
     </properties>
 
+    <scm>
+        <developerConnection>${scm.developerConnection.prefix}${scm.project.name}</developerConnection>
+    </scm>
+
 </project>
