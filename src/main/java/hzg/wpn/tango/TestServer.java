@@ -101,7 +101,7 @@ public class TestServer {
 
         for (int i = 0; i < getNumberOfImages(); ++i) {
             try {
-                Files.write(imageDirectory.resolve(getFilePrefix() + "000" + i + ".tiff"), buffer.array());
+                Files.write(imageDirectory.resolve(getFilePrefix() + "00000" + i + ".tiff"), buffer.array());
             } catch (IOException e) {
                 e.printStackTrace();
             }
