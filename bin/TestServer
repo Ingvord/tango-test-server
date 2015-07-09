@@ -1,0 +1,14 @@
+#!/bin/bash
+
+echo "Using TANGO_HOST=$TANGO_HOST"
+echo "Using JAVA_HOME=$JAVA_HOME"
+
+export INSTANCE_NAME="test"
+echo "Using INSTANCE_NAME=$INSTANCE_NAME"
+
+#-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005
+JAVA_OPTS="-server -Xmx1G -Xshare:off -XX:+UseG1GC"
+echo "Using JAVA_OPTS=$JAVA_OPTS"
+
+$JAVA_HOME/bin/java $JAVA_OPTS -cp "../lib/*" hzg.wpn.tango.TestServer $INSTANCE_NAME \
+  > out 2>&1 &
