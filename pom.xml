@@ -19,8 +19,7 @@
 
     <scm>
         <developerConnection>${scm.developerConnection.prefix}${scm.project.name}</developerConnection>
-      <tag>HEAD</tag>
-  </scm>
+    </scm>
 
     <build>
         <plugins>
