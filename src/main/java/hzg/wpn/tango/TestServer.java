@@ -138,7 +138,7 @@ public class TestServer {
 
     @Init
     @StateMachine(endState = DeviceState.ON)
-    public void init() {
+    public void init() throws Exception {
         aDouble = 100.0D;
         aFloat = 50.0F;
         aLong = 1000;
@@ -154,11 +154,12 @@ public class TestServer {
                 }
             }
         }, (long) Math.random() * 100L, 300L, TimeUnit.NANOSECONDS);
-
+        deviceManager.startPolling("register15", 1);
     }
 
     @Delete
-    public void delete() {
+    public void delete() throws Exception {
         exec.shutdownNow();
+        deviceManager.stopPolling("register15");
     }
 }
