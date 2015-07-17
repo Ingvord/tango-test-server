@@ -1,13 +1,21 @@
 package hzg.wpn.tango;
 
+import fr.esrf.Tango.DevFailed;
 import org.tango.DeviceState;
 import org.tango.server.ServerManager;
 import org.tango.server.annotation.*;
+import org.tango.server.attribute.AttributeValue;
+import org.tango.server.device.DeviceManager;
+import org.tango.server.events.EventType;
+import org.tango.utils.DevFailedUtils;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author Igor Khokhriakov <igor.khokhriakov@hzg.de>
@@ -15,13 +23,13 @@ import java.nio.file.Path;
  */
 @Device
 public class TestServer {
+    private static final ScheduledExecutorService exec = Executors.newScheduledThreadPool(1);
     private double aDouble = 100.0D;
     private float aFloat = 50.0F;
     private long aLong = 1000;
     private int anInt = 10;
     //Simulate camera API
     private Path imageDirectory;
-
     {
         try {
             imageDirectory = Files.createTempDirectory("tmp_");
@@ -30,11 +38,23 @@ public class TestServer {
         }
     }
 
+    @DeviceManagement
+    private DeviceManager deviceManager;
     @State
     private DeviceState state;
 
     public static void main(String[] args) {
         ServerManager.getInstance().start(args, TestServer.class);
+    }
+
+    public void setDeviceManager(DeviceManager manager) {
+        deviceManager = manager;
+    }
+
+    @Attribute
+    @AttributeProperties(description = "System.currentTimeMillis")
+    public long getRegister15() {
+        return System.currentTimeMillis();
     }
 
     @Attribute
@@ -123,5 +143,22 @@ public class TestServer {
         aFloat = 50.0F;
         aLong = 1000;
         anInt = 10;
+
+        exec.scheduleWithFixedDelay(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    deviceManager.pushEvent("register15", new AttributeValue(System.currentTimeMillis()), EventType.CHANGE_EVENT);
+                } catch (DevFailed devFailed) {
+                    DevFailedUtils.printDevFailed(devFailed);
+                }
+            }
+        }, (long) Math.random() * 100L, 300L, TimeUnit.NANOSECONDS);
+
+    }
+
+    @Delete
+    public void delete() {
+        exec.shutdownNow();
     }
 }
