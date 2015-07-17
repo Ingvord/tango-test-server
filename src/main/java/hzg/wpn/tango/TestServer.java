@@ -148,7 +148,7 @@ public class TestServer {
             @Override
             public void run() {
                 try {
-                    deviceManager.pushEvent("register15", new AttributeValue(System.currentTimeMillis()), EventType.CHANGE_EVENT);
+                    deviceManager.pushEvent("register15", new AttributeValue(System.currentTimeMillis()), EventType.USER_EVENT);
                 } catch (DevFailed devFailed) {
                     DevFailedUtils.printDevFailed(devFailed);
                 }
