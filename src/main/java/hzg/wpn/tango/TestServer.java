@@ -6,14 +6,17 @@ import org.tango.server.ServerManager;
 import org.tango.server.annotation.*;
 import org.tango.server.attribute.AttributeValue;
 import org.tango.server.device.DeviceManager;
+import org.tango.server.events.EventManager;
 import org.tango.server.events.EventType;
 import org.tango.utils.DevFailedUtils;
 
 import java.io.IOException;
+import java.lang.reflect.Method;
 import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.concurrent.Executors;
+import java.util.concurrent.FutureTask;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
@@ -42,6 +45,19 @@ public class TestServer {
     private DeviceManager deviceManager;
     @State
     private DeviceState state;
+    private Runnable register13 = new Runnable() {
+        @Override
+        public void run() {
+            try {
+                long value = System.currentTimeMillis();
+//                    System.out.println("Sending new value = " + value);
+                deviceManager.pushEvent("register13", new AttributeValue(value), EventType.CHANGE_EVENT);
+            } catch (DevFailed devFailed) {
+                DevFailedUtils.printDevFailed(devFailed);
+            }
+        }
+    };
+    private FutureTask<Void> register13Task;
 
     public static void main(String[] args) {
         ServerManager.getInstance().start(args, TestServer.class);
@@ -51,9 +67,9 @@ public class TestServer {
         deviceManager = manager;
     }
 
-    @Attribute
+    @Attribute(pushChangeEvent = true, checkChangeEvent = false)
     @AttributeProperties(description = "System.currentTimeMillis")
-    public long getRegister15() {
+    public long getRegister13() {
         return System.currentTimeMillis();
     }
 
@@ -144,17 +160,19 @@ public class TestServer {
         aLong = 1000;
         anInt = 10;
 
-        exec.scheduleWithFixedDelay(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    deviceManager.pushEvent("register15", new AttributeValue(System.currentTimeMillis()), EventType.USER_EVENT);
-                } catch (DevFailed devFailed) {
-                    DevFailedUtils.printDevFailed(devFailed);
-                }
-            }
-        }, (long) Math.random() * 100L, 300L, TimeUnit.NANOSECONDS);
-        deviceManager.startPolling("register15", 1);
+        Method initialize = EventManager.class.getDeclaredMethod("initialize");
+        initialize.setAccessible(true);
+        initialize.invoke(EventManager.getInstance());
+    }
+
+    @Command
+    public void simulate_tik_tak() {
+        register13Task = (FutureTask<Void>) exec.scheduleWithFixedDelay(register13, (long) (Math.random() * 100L), 50L, TimeUnit.MILLISECONDS);
+    }
+
+    @Command
+    public void stop_tik_tak() {
+        register13Task.cancel(true);
     }
 
     @Delete

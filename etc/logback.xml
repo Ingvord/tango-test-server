@@ -9,11 +9,11 @@
 
     <logger name="org.jacorb" level="ERROR"/>
     <logger name="net.sf.ehcache" level="ERROR"/>
-    <logger name="org.tango" level="ERROR"/>
-    <logger name="hzg.wpn.tango" level="DEBUG"/>
+    <logger name="org.tango" level="TRACE"/>
+    <logger name="hzg.wpn.tango" level="TRACE"/>
     <!-- StatusServer -->
-    <logger name="hzg.hdri.ss" level="DEBUG"/>
-    <root level="INFO">
+    <logger name="hzg.hdri.ss" level="TRACE"/>
+    <root level="TRACE">
         <appender-ref ref="CONSOLE"/>
     </root>
 </configuration>
