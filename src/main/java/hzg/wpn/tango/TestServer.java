@@ -13,9 +13,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
-import java.util.EnumSet;
 import java.util.concurrent.Executors;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.ScheduledExecutorService;
@@ -37,7 +35,7 @@ public class TestServer {
     {
         try {
             imageDirectory = Files.createTempDirectory("tmp_",
-                    PosixFilePermissions.asFileAttribute(EnumSet.of(PosixFilePermission.GROUP_READ, PosixFilePermission.OTHERS_READ)));
+                    PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rwxr--r--")));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
