@@ -6,15 +6,16 @@ import org.tango.server.ServerManager;
 import org.tango.server.annotation.*;
 import org.tango.server.attribute.AttributeValue;
 import org.tango.server.device.DeviceManager;
-import org.tango.server.events.EventManager;
 import org.tango.server.events.EventType;
 import org.tango.utils.DevFailedUtils;
 
 import java.io.IOException;
-import java.lang.reflect.Method;
 import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.attribute.PosixFilePermission;
+import java.nio.file.attribute.PosixFilePermissions;
+import java.util.EnumSet;
 import java.util.concurrent.Executors;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.ScheduledExecutorService;
@@ -35,7 +36,8 @@ public class TestServer {
     private Path imageDirectory;
     {
         try {
-            imageDirectory = Files.createTempDirectory("tmp_");
+            imageDirectory = Files.createTempDirectory("tmp_",
+                    PosixFilePermissions.asFileAttribute(EnumSet.of(PosixFilePermission.GROUP_READ, PosixFilePermission.OTHERS_READ)));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -159,10 +161,6 @@ public class TestServer {
         aFloat = 50.0F;
         aLong = 1000;
         anInt = 10;
-
-        Method initialize = EventManager.class.getDeclaredMethod("initialize");
-        initialize.setAccessible(true);
-        initialize.invoke(EventManager.getInstance());
     }
 
     @Command
