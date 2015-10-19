@@ -35,7 +35,7 @@ public class TestServer {
     {
         try {
             imageDirectory = Files.createTempDirectory("tmp_",
-                    PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rwxr--r--")));
+                    PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rwxr-xr-x")));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
