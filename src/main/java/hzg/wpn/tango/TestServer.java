@@ -174,6 +174,5 @@ public class TestServer {
     @Delete
     public void delete() throws Exception {
         exec.shutdownNow();
-        deviceManager.stopPolling("register15");
     }
 }
