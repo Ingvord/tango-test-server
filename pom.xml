@@ -10,7 +10,7 @@
     </parent>
 
     <artifactId>TestServer</artifactId>
-    <version>1.4</version>
+    <version>1.5</version>
 
 
     <properties>
@@ -28,6 +28,15 @@
                 <artifactId>maven-assembly-plugin</artifactId>
                 <configuration>
                     <skipAssembly>false</skipAssembly>
+                    <appendAssemblyId>false</appendAssemblyId>
+                    <descriptorRefs>
+                        <descriptorRef>jar-with-dependencies</descriptorRef>
+                    </descriptorRefs>
+                    <archive>
+                        <manifest>
+                            <mainClass>hzg.wpn.tango.TestServer</mainClass>
+                        </manifest>
+                    </archive>
                 </configuration>
             </plugin>
         </plugins>
