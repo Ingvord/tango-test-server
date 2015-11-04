@@ -36,7 +36,7 @@ public class TestServer {
 
     {
         try {
-            if (System.getProperty("os.name").equals("linux"))
+            if (System.getProperty("os.name").equals("Linux"))
                 imageDirectory = Files.createTempDirectory("tmp_",
                         PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rwxr-xr-x")));
             else {
