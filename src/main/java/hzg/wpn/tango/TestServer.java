@@ -14,6 +14,7 @@ import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.PosixFilePermissions;
+import java.util.Random;
 import java.util.concurrent.Executors;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.ScheduledExecutorService;
@@ -32,10 +33,15 @@ public class TestServer {
     private int anInt = 10;
     //Simulate camera API
     private Path imageDirectory;
+
     {
         try {
-            imageDirectory = Files.createTempDirectory("tmp_",
-                    PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rwxr-xr-x")));
+            if (System.getProperty("os.name").equals("linux"))
+                imageDirectory = Files.createTempDirectory("tmp_",
+                        PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rwxr-xr-x")));
+            else {
+                imageDirectory = Files.createTempDirectory("tmp_");
+            }
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -58,6 +64,8 @@ public class TestServer {
         }
     };
     private FutureTask<Void> register13Task;
+    private SensorSizePx sensorSizePx = SensorSizePx._16P;
+    private long delay = 50L;
 
     public static void main(String[] args) {
         ServerManager.getInstance().start(args, TestServer.class);
@@ -123,17 +131,16 @@ public class TestServer {
         };
     }
 
+    @Attribute
+    public void setSensorSizePx(String size) {
+        this.sensorSizePx = SensorSizePx.valueOf(size.toUpperCase());
+    }
+
     @Command
     @StateMachine(endState = DeviceState.ON)
     public void start() {
         setState(DeviceState.RUNNING);
-        ByteBuffer buffer = ByteBuffer.allocate(4 * 8 * 2);
-        buffer.asShortBuffer().put(new short[]{
-                255, 0, 0, 0, 0, 0, 0, 255,
-                0, 0, 255, 255, 255, 255, 0, 0,
-                0, 0, 255, 255, 255, 255, 0, 0,
-                255, 0, 0, 0, 0, 0, 0, 255
-        });
+        ByteBuffer buffer = getByteBuffer();
 
         for (int i = 0; i < getNumberOfImages(); ++i) {
             try {
@@ -142,6 +149,20 @@ public class TestServer {
                 e.printStackTrace();
             }
         }
+    }
+
+    private ByteBuffer getByteBuffer() {
+        Random rnd = new Random();
+
+        int size = sensorSizePx.value * 2;// each pixel = 2 Bytes
+
+        ByteBuffer buffer = ByteBuffer.allocate(size);
+
+        for (int i = 0; i < size; ++i) {
+            buffer.asShortBuffer().put((short) rnd.nextInt());
+        }
+
+        return buffer;
     }
 
     public DeviceState getState() {
@@ -161,9 +182,14 @@ public class TestServer {
         anInt = 10;
     }
 
+    @Attribute
+    public void setTikTakDelay(long delay) {
+        this.delay = delay;
+    }
+
     @Command
     public void simulate_tik_tak() {
-        register13Task = (FutureTask<Void>) exec.scheduleWithFixedDelay(register13, (long) (Math.random() * 100L), 50L, TimeUnit.MILLISECONDS);
+        register13Task = (FutureTask<Void>) exec.scheduleWithFixedDelay(register13, 0L, delay, TimeUnit.MILLISECONDS);
     }
 
     @Command
@@ -174,5 +200,17 @@ public class TestServer {
     @Delete
     public void delete() throws Exception {
         exec.shutdownNow();
+    }
+
+    public static enum SensorSizePx {
+        _20MP(20000000),
+        _4MP(4000000),
+        _16P(16);
+
+        public final int value;
+
+        SensorSizePx(int value) {
+            this.value = value;
+        }
     }
 }
