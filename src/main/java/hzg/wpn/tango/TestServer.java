@@ -52,7 +52,7 @@ public class TestServer {
                 if (TestServer.this.state == DeviceState.FAULT)
                     throw new RuntimeException("TestServer is in FAULT state!");
 
-
+                Thread.sleep(delay);
                 //taking image
                 deviceManager.pushEvent("register13", new AttributeValue(1), EventType.CHANGE_EVENT);
                 value = 1;
