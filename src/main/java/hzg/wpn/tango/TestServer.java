@@ -161,9 +161,9 @@ public class TestServer {
     private ByteBuffer getByteBuffer() {
         Random rnd = new Random();
 
-        int size = sensorSizePx.value * 2;// each pixel = 2 Bytes
+        int size = sensorSizePx.value;// each pixel = 2 Bytes
 
-        ByteBuffer buffer = ByteBuffer.allocate(size);
+        ByteBuffer buffer = ByteBuffer.allocate(size * 2);
 
         ShortBuffer shortBuffer = buffer.asShortBuffer();
         for (int i = 0; i < size; ++i) {
