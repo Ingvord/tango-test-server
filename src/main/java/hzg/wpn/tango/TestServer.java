@@ -143,13 +143,18 @@ public class TestServer {
         this.sensorSizePx = SensorSizePx.valueOf(size.toUpperCase());
     }
 
+    @Attribute
+    public String getSensorSizePx(String size) {
+        return this.sensorSizePx.name();
+    }
+
     @Command
     @StateMachine(endState = DeviceState.ON)
     public void write_image() throws IOException {
         setState(DeviceState.RUNNING);
         ByteBuffer buffer = getByteBuffer();
 
-        Files.write(Paths.get("/home/p07user/test00000.tif"), buffer.array(), StandardOpenOption.CREATE_NEW);
+        Files.write(Paths.get("/home/p07user/test00000.tif"), buffer.array(), StandardOpenOption.CREATE);
     }
 
     private ByteBuffer getByteBuffer() {
