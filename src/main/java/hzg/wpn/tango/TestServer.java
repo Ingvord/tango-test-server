@@ -47,11 +47,14 @@ public class TestServer {
     private Runnable register13 = new Runnable() {
         @Override
         public void run() {
+            long iter = 0;
             while (true)
             try {
                 if (TestServer.this.state == DeviceState.FAULT)
                     throw new RuntimeException("TestServer is in FAULT state!");
 
+                System.err.println("Iteration #" + iter++);
+                System.err.println("System timestamp = " + System.currentTimeMillis());
                 Thread.sleep(delay);
                 //taking image
                 System.err.println("Sending event: start image");
