@@ -11,6 +11,7 @@ import org.tango.utils.DevFailedUtils;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.ShortBuffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -164,8 +165,9 @@ public class TestServer {
 
         ByteBuffer buffer = ByteBuffer.allocate(size);
 
+        ShortBuffer shortBuffer = buffer.asShortBuffer();
         for (int i = 0; i < size; ++i) {
-            buffer.asShortBuffer().put((short) rnd.nextInt());
+            shortBuffer.put((short) rnd.nextInt());
         }
 
         return buffer;
