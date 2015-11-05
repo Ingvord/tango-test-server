@@ -54,6 +54,7 @@ public class TestServer {
 
                 Thread.sleep(delay);
                 //taking image
+                System.err.println("Sending event: start image");
                 deviceManager.pushEvent("register13", new AttributeValue(1), EventType.CHANGE_EVENT);
                 value = 1;
 
@@ -64,6 +65,7 @@ public class TestServer {
                 Thread.sleep(Math.max(delay, delay - (stopWrite - startWrite)));
 
                 //done taking image
+                System.err.println("Sending event: stop image");
                 deviceManager.pushEvent("register13", new AttributeValue(0), EventType.CHANGE_EVENT);
                 value = 0;
             } catch (DevFailed devFailed) {
@@ -73,6 +75,7 @@ public class TestServer {
                 ioe.printStackTrace();
                 TestServer.this.state = DeviceState.FAULT;
             } catch (InterruptedException e) {
+                System.err.println("Interrupting...");
                 Thread.currentThread().interrupt();
                 break;
             }
@@ -201,13 +204,16 @@ public class TestServer {
     }
 
     @Command
+    @StateMachine(endState = DeviceState.RUNNING)
     public void start() {
+        System.err.println("Starting...");
         register13Task = (FutureTask<Void>) exec.submit(register13);
     }
 
     @Command
     @StateMachine(endState = DeviceState.ON)
     public void stop() {
+        System.err.println("Stopping...");
         register13Task.cancel(true);
     }
 
