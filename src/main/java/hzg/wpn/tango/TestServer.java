@@ -20,7 +20,6 @@ import java.util.Random;
 import java.util.concurrent.Executors;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
 /**
  * @author Igor Khokhriakov <igor.khokhriakov@hzg.de>
@@ -42,39 +41,43 @@ public class TestServer {
     private DeviceManager deviceManager;
     @State
     private DeviceState state;
+    private FutureTask<Void> register13Task;
+    private SensorSizePx sensorSizePx = SensorSizePx._16P;
+    private long delay = 50L;
     private Runnable register13 = new Runnable() {
         @Override
         public void run() {
+            while (true)
             try {
                 if (TestServer.this.state == DeviceState.FAULT)
                     throw new RuntimeException("TestServer is in FAULT state!");
-                switch (value) {
-                    case 0:
-                        deviceManager.pushEvent("register13", new AttributeValue(value), EventType.CHANGE_EVENT);
-                        value = 1;
-                        break;
-                    case 1:
-                        TestServer.this.write_image();//create image
-                        deviceManager.pushEvent("register13", new AttributeValue(value), EventType.CHANGE_EVENT);
-                        value = 0;
-                        break;
-                    default:
-                        throw new AssertionError();
-                }
-//                    System.out.println("Sending new value = " + value);
 
+
+                //taking image
+                deviceManager.pushEvent("register13", new AttributeValue(1), EventType.CHANGE_EVENT);
+                value = 1;
+
+                long startWrite = System.currentTimeMillis();
+                TestServer.this.write_image();//create image
+                long stopWrite = System.currentTimeMillis();
+
+                Thread.sleep(delay - (stopWrite - startWrite));
+
+                //done taking image
+                deviceManager.pushEvent("register13", new AttributeValue(0), EventType.CHANGE_EVENT);
+                value = 0;
             } catch (DevFailed devFailed) {
                 DevFailedUtils.printDevFailed(devFailed);
                 TestServer.this.state = DeviceState.FAULT;
             } catch (IOException ioe) {
                 ioe.printStackTrace();
                 TestServer.this.state = DeviceState.FAULT;
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                break;
             }
         }
     };
-    private FutureTask<Void> register13Task;
-    private SensorSizePx sensorSizePx = SensorSizePx._16P;
-    private long delay = 50L;
 
     public static void main(String[] args) {
         ServerManager.getInstance().start(args, TestServer.class);
@@ -197,7 +200,7 @@ public class TestServer {
 
     @Command
     public void start() {
-        register13Task = (FutureTask<Void>) exec.scheduleWithFixedDelay(register13, 0L, delay, TimeUnit.MILLISECONDS);
+        register13Task = (FutureTask<Void>) exec.submit(register13);
     }
 
     @Command
