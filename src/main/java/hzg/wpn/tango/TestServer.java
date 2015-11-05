@@ -27,7 +27,7 @@ import java.util.concurrent.ScheduledExecutorService;
  */
 @Device
 public class TestServer {
-    private static final ScheduledExecutorService exec = Executors.newScheduledThreadPool(1);
+    private ScheduledExecutorService exec;
     private double aDouble = 100.0D;
     private float aFloat = 50.0F;
     private long aLong = 1000;
@@ -61,7 +61,7 @@ public class TestServer {
                 TestServer.this.write_image();//create image
                 long stopWrite = System.currentTimeMillis();
 
-                Thread.sleep(delay - (stopWrite - startWrite));
+                Thread.sleep(Math.max(delay, delay - (stopWrite - startWrite)));
 
                 //done taking image
                 deviceManager.pushEvent("register13", new AttributeValue(0), EventType.CHANGE_EVENT);
@@ -191,6 +191,8 @@ public class TestServer {
         aFloat = 50.0F;
         aLong = 1000;
         anInt = 10;
+
+        exec = Executors.newScheduledThreadPool(1);
     }
 
     @Attribute
@@ -204,6 +206,7 @@ public class TestServer {
     }
 
     @Command
+    @StateMachine(endState = DeviceState.ON)
     public void stop() {
         register13Task.cancel(true);
     }
