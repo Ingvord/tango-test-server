@@ -13,7 +13,8 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.attribute.PosixFilePermissions;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.util.Random;
 import java.util.concurrent.Executors;
 import java.util.concurrent.FutureTask;
@@ -32,20 +33,9 @@ public class TestServer {
     private long aLong = 1000;
     private int anInt = 10;
     //Simulate camera API
-    private Path imageDirectory;
+    private Path imageDirectory = Paths.get("/tmp");
 
-    {
-        try {
-            if (System.getProperty("os.name").equals("Linux"))
-                imageDirectory = Files.createTempDirectory("tmp_",
-                        PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rwxr-xr-x")));
-            else {
-                imageDirectory = Files.createTempDirectory("tmp_");
-            }
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
+    private volatile int value = 0;
 
     @DeviceManagement
     private DeviceManager deviceManager;
@@ -55,11 +45,29 @@ public class TestServer {
         @Override
         public void run() {
             try {
-                long value = System.currentTimeMillis();
+                if (TestServer.this.state == DeviceState.FAULT)
+                    throw new RuntimeException("TestServer is in FAULT state!");
+                switch (value) {
+                    case 0:
+                        deviceManager.pushEvent("register13", new AttributeValue(value), EventType.CHANGE_EVENT);
+                        value = 1;
+                        break;
+                    case 1:
+                        TestServer.this.write_image();//create image
+                        deviceManager.pushEvent("register13", new AttributeValue(value), EventType.CHANGE_EVENT);
+                        value = 0;
+                        break;
+                    default:
+                        throw new AssertionError();
+                }
 //                    System.out.println("Sending new value = " + value);
-                deviceManager.pushEvent("register13", new AttributeValue(value), EventType.CHANGE_EVENT);
+
             } catch (DevFailed devFailed) {
                 DevFailedUtils.printDevFailed(devFailed);
+                TestServer.this.state = DeviceState.FAULT;
+            } catch (IOException ioe) {
+                ioe.printStackTrace();
+                TestServer.this.state = DeviceState.FAULT;
             }
         }
     };
@@ -76,9 +84,8 @@ public class TestServer {
     }
 
     @Attribute(pushChangeEvent = true, checkChangeEvent = false)
-    @AttributeProperties(description = "System.currentTimeMillis")
     public long getRegister13() {
-        return System.currentTimeMillis();
+        return value;
     }
 
     @Attribute
@@ -138,17 +145,11 @@ public class TestServer {
 
     @Command
     @StateMachine(endState = DeviceState.ON)
-    public void start() {
+    public void write_image() throws IOException {
         setState(DeviceState.RUNNING);
         ByteBuffer buffer = getByteBuffer();
 
-        for (int i = 0; i < getNumberOfImages(); ++i) {
-            try {
-                Files.write(imageDirectory.resolve(getFilePrefix() + "00000" + i + ".tiff"), buffer.array());
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
+        Files.write(Paths.get("/home/p07user/test00000.tif"), buffer.array(), StandardOpenOption.CREATE_NEW);
     }
 
     private ByteBuffer getByteBuffer() {
@@ -188,12 +189,12 @@ public class TestServer {
     }
 
     @Command
-    public void simulate_tik_tak() {
+    public void start() {
         register13Task = (FutureTask<Void>) exec.scheduleWithFixedDelay(register13, 0L, delay, TimeUnit.MILLISECONDS);
     }
 
     @Command
-    public void stop_tik_tak() {
+    public void stop() {
         register13Task.cancel(true);
     }
 
