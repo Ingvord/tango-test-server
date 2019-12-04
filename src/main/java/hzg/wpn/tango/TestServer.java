@@ -20,12 +20,13 @@ import java.util.Random;
 import java.util.concurrent.Executors;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author Igor Khokhriakov <igor.khokhriakov@hzg.de>
  * @since 09.07.2015
  */
-@Device
+@Device(transactionType = TransactionType.NONE)
 public class TestServer {
     private ScheduledExecutorService exec;
     private double aDouble = 100.0D;
@@ -39,16 +40,28 @@ public class TestServer {
 
     @DeviceManagement
     private DeviceManager deviceManager;
-    @State
+    @State(isPolled = true)
     private DeviceState state;
+    @Status(isPolled = true)
+    private String status;
     private FutureTask<Void> register13Task;
     private SensorSizePx sensorSizePx = SensorSizePx._16P;
     private long delay = 50L;
+    private Runnable broadcastStatus = () -> {
+        while (!Thread.currentThread().isInterrupted()){
+            try {
+                deviceManager.pushEvent("Status",new AttributeValue("" + Math.random()), EventType.CHANGE_EVENT);
+            } catch (DevFailed devFailed) {
+                DevFailedUtils.printDevFailed(devFailed);
+            }
+        }
+    };
+
     private Runnable register13 = new Runnable() {
         @Override
         public void run() {
             long iter = 0;
-            while (true)
+            while (!Thread.currentThread().isInterrupted())
             try {
                 if (TestServer.this.state == DeviceState.FAULT)
                     throw new RuntimeException("TestServer is in FAULT state!");
@@ -199,6 +212,7 @@ public class TestServer {
         anInt = 10;
 
         exec = Executors.newScheduledThreadPool(1);
+        exec.scheduleAtFixedRate(this.broadcastStatus, 1, 1, TimeUnit.SECONDS);
     }
 
     @Attribute
@@ -235,5 +249,13 @@ public class TestServer {
         SensorSizePx(int value) {
             this.value = value;
         }
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
     }
 }
