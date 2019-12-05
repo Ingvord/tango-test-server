@@ -258,4 +258,21 @@ public class TestServer {
     public void setStatus(String status) {
         this.status = status;
     }
+
+    @Attribute
+    public void setTestTimeoutWriteAttributeA(long n){
+        System.out.println(String.format("A-%d@%d",System.currentTimeMillis(), n));
+    }
+
+    @Attribute
+    public void setTestTimeoutWriteAttributeB(long n){
+        System.out.println(String.format("B-%d@%d",System.currentTimeMillis(), n));
+    }
+
+    @Command
+    public String getTestTimeoutEcho(String incoming){
+        String outcoming = String.format("%s@%d", incoming, System.currentTimeMillis());
+        System.out.println(outcoming);
+        return outcoming;
+    }
 }

@@ -6,13 +6,12 @@ import fr.esrf.TangoApi.DeviceProxyFactory;
 import fr.esrf.TangoApi.events.ITangoChangeListener;
 import fr.esrf.TangoApi.events.TangoChange;
 import fr.esrf.TangoApi.events.TangoChangeEvent;
-import fr.soleil.tango.clientapi.TangoAttribute;
+import fr.soleil.tango.clientapi.TangoCommand;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.tango.client.ez.proxy.TangoProxies;
+import org.tango.client.ez.proxy.TangoProxy;
 import org.tango.utils.DevFailedUtils;
-import org.tango.client.ez.proxy.*;
-
-import static org.junit.Assert.*;
 
 /**
  * @author Igor Khokhriakov <igor.khokhriakov@hzg.de>
@@ -43,12 +42,11 @@ public class TestServerTest {
     @Test
     @Ignore
     public void testTimeout() throws Exception{
-//        DeviceProxy proxy = DeviceProxyFactory.get("development/test_server/0","hzgxenvtest:10000");
+        TangoCommand cmd = new TangoCommand("development/test_server/0/getTestTimeoutEcho");
 
-        TangoAttribute attr = new TangoAttribute("development/test_server/0/double");
-
-        for(int i = 0; i<1_000_000; ++i) {
-            System.out.println(attr.read());
+        for(long i = 0; i<1_000_000; ++i) {
+            String result = String.valueOf(cmd.executeExtract(String.format("A-%d@%d",i,System.currentTimeMillis())));
+            System.out.println(String.format("%s@%d",result, System.currentTimeMillis()));
         }
     }
 
@@ -57,8 +55,9 @@ public class TestServerTest {
     public void testTimeout_withEz() throws Exception{
         TangoProxy proxy = TangoProxies.newDeviceProxyWrapper("tango://hzgxenvtest:10000/development/test_server/0");
 
-        for(int i = 0; i<1_000_000; ++i) {
-            System.out.println(Double.toString(proxy.readAttribute("double")));
+        for(long i = 0; i<1_000_000; ++i) {
+            String result = proxy.executeCommand("getTestTimeoutEcho",String.format("B-%d@%d",i,System.currentTimeMillis()));
+            System.out.println(String.format("%s@%d",result, System.currentTimeMillis()));
         }
     }
 }
