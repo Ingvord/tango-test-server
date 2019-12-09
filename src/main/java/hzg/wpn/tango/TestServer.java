@@ -2,6 +2,7 @@ package hzg.wpn.tango;
 
 import fr.esrf.Tango.DevFailed;
 import org.tango.DeviceState;
+import org.tango.server.InvocationContext;
 import org.tango.server.ServerManager;
 import org.tango.server.annotation.*;
 import org.tango.server.attribute.AttributeValue;
@@ -17,10 +18,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.Random;
-import java.util.concurrent.Executors;
-import java.util.concurrent.FutureTask;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * @author Igor Khokhriakov <igor.khokhriakov@hzg.de>
@@ -261,17 +260,43 @@ public class TestServer {
 
     @Attribute
     public void setTestTimeoutWriteAttributeA(long n){
-        System.out.println(String.format("A-%d@%d",System.currentTimeMillis(), n));
+        System.out.println(String.format("A\t%d\t%d",System.currentTimeMillis(), n));
     }
 
     @Attribute
     public void setTestTimeoutWriteAttributeB(long n){
-        System.out.println(String.format("B-%d@%d",System.currentTimeMillis(), n));
+        System.out.println(String.format("B\t%d\t%d",System.currentTimeMillis(), n));
+    }
+
+    private final ThreadLocal<String> clientMainClass = new ThreadLocal<>();
+    private final ConcurrentMap<String, AtomicLong> clientReqId = new ConcurrentHashMap<>();
+
+    @AroundInvoke
+    public void aroundInvoke(InvocationContext ctx){
+        String clientMainClass = ctx.getClientID().java_clnt().MainClass;
+        this.clientMainClass.set(
+                clientMainClass);
+        clientReqId.putIfAbsent(clientMainClass, new AtomicLong(0L));
+    }
+
+    @Command
+    public void resetReqId(){
+        AtomicLong counter = clientReqId.getOrDefault(this.clientMainClass.get(), new AtomicLong(0L));
+        counter.set(0L);
+    }
+
+
+    @Attribute
+    public String getTestTimeoutAttribute(){
+        long counter = clientReqId.getOrDefault(this.clientMainClass.get(), new AtomicLong(0L)).getAndIncrement();
+        String outcoming = String.format("%s\t%d\t%d", clientMainClass.get(), counter, System.currentTimeMillis());
+        System.out.println(outcoming);
+        return outcoming;
     }
 
     @Command
     public String getTestTimeoutEcho(String incoming){
-        String outcoming = String.format("%s@%d", incoming, System.currentTimeMillis());
+        String outcoming = String.format("%s\t%d", incoming, System.currentTimeMillis());
         System.out.println(outcoming);
         return outcoming;
     }
