@@ -1,6 +1,8 @@
 package hzg.wpn.tango;
 
 import fr.esrf.Tango.DevFailed;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.tango.DeviceState;
 import org.tango.server.InvocationContext;
 import org.tango.server.ServerManager;
@@ -27,6 +29,8 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 @Device(transactionType = TransactionType.NONE)
 public class TestServer {
+    private final Logger logger = LoggerFactory.getLogger(TestServer.class);
+
     private ScheduledExecutorService exec;
     private double aDouble = 100.0D;
     private float aFloat = 50.0F;
@@ -211,7 +215,7 @@ public class TestServer {
         anInt = 10;
 
         exec = Executors.newScheduledThreadPool(1);
-        exec.scheduleAtFixedRate(this.broadcastStatus, 1, 1, TimeUnit.SECONDS);
+//        exec.scheduleAtFixedRate(this.broadcastStatus, 1, 1, TimeUnit.SECONDS);
     }
 
     @Attribute
@@ -290,14 +294,14 @@ public class TestServer {
     public String getTestTimeoutAttribute(){
         long counter = clientReqId.getOrDefault(this.clientMainClass.get(), new AtomicLong(0L)).getAndIncrement();
         String outcoming = String.format("%s\t%d\t%d", clientMainClass.get(), counter, System.currentTimeMillis());
-        System.out.println(outcoming);
+        logger.debug(outcoming);
         return outcoming;
     }
 
     @Command
     public String getTestTimeoutEcho(String incoming){
         String outcoming = String.format("%s\t%d", incoming, System.currentTimeMillis());
-        System.out.println(outcoming);
+        logger.debug(outcoming);
         return outcoming;
     }
 }
