@@ -7,13 +7,12 @@
         </layout>
     </appender>
 
-    <logger name="org.jacorb" level="TRACE"/>
+    <logger name="org.jacorb" level="ERROR"/>
     <logger name="net.sf.ehcache" level="ERROR"/>
-    <logger name="org.tango" level="TRACE"/>
+    <logger name="org.tango" level="ERROR"/>
     <logger name="org.tango.server.events" level="ERROR"/>
-    <logger name="hzg.wpn.tango" level="DEBUG"/>
-    <logger name="org.tango.orb.ServerRequestInterceptor" level="TRACE"/>
-    <root level="DEBUG">
+    <logger name="hzg.wpn.tango" level="ERROR"/>
+    <root level="ERROR">
         <appender-ref ref="CONSOLE"/>
     </root>
 </configuration>

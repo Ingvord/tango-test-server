@@ -7,6 +7,7 @@ import fr.esrf.TangoApi.DeviceProxyFactory;
 import fr.esrf.TangoApi.events.ITangoChangeListener;
 import fr.esrf.TangoApi.events.TangoChange;
 import fr.esrf.TangoApi.events.TangoChangeEvent;
+import fr.esrf.TangoDs.Except;
 import fr.soleil.tango.clientapi.TangoAttribute;
 import fr.soleil.tango.clientapi.TangoCommand;
 import org.junit.Before;
@@ -16,6 +17,13 @@ import org.tango.client.ez.proxy.ReadAttributeException;
 import org.tango.client.ez.proxy.TangoProxies;
 import org.tango.client.ez.proxy.TangoProxy;
 import org.tango.utils.DevFailedUtils;
+
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * @author Igor Khokhriakov <igor.khokhriakov@hzg.de>
@@ -32,7 +40,18 @@ public class TestServerTest {
             @Override
             public void change(TangoChangeEvent e) {
                 try {
-                    System.out.println(e.getValue().extractString());
+                    System.out.println("Status="+e.getValue().extractString());
+                } catch (DevFailed devFailed) {
+                    DevFailedUtils.printDevFailed(devFailed);
+                }
+            }
+        }, true);
+
+        new TangoChange(proxy, "State",new String[0]).addTangoChangeListener(new ITangoChangeListener() {
+            @Override
+            public void change(TangoChangeEvent e) {
+                try {
+                    System.out.println("State="+e.getValue().extractDevState().toString());
                 } catch (DevFailed devFailed) {
                     DevFailedUtils.printDevFailed(devFailed);
                 }
@@ -108,4 +127,45 @@ public class TestServerTest {
         }
     }
 
+    @Test
+    @Ignore
+    public void testBenchmark_15s() throws Exception {
+        final AtomicInteger operations = new AtomicInteger(0);
+        final AtomicInteger errors = new AtomicInteger(0);
+
+        final AtomicBoolean finish = new AtomicBoolean(false);
+
+        Runnable runnable = new Runnable() {
+            public void run() {
+                TangoAttribute attr = null;
+                try {
+                    attr = new TangoAttribute("development/test_server/0/testTimeoutAttribute");
+                } catch (DevFailed devFailed) {
+                    DevFailedUtils.printDevFailed(devFailed);
+                    throw new RuntimeException();
+                }
+
+                while (!finish.get()) {
+                    try {
+                        attr.read(String.class);
+                        operations.incrementAndGet();
+                    } catch (Exception e) {
+                        errors.incrementAndGet();
+                    }
+                }
+            }
+        };
+
+        ScheduledExecutorService scheduledExecutorService = Executors.newScheduledThreadPool(2);
+
+        scheduledExecutorService.submit(runnable);
+        scheduledExecutorService.schedule(() -> {
+            finish.set(true);
+        }, 15, TimeUnit.SECONDS);
+
+        scheduledExecutorService.awaitTermination(15, TimeUnit.SECONDS);
+
+        System.out.println(String.format("Total operations within 15s: %d", operations.get()));
+        System.out.println(String.format("Total errors within 15s: %d", errors.get()));
+    }
 }

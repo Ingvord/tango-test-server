@@ -33,8 +33,8 @@
     <orderEntry type="library" name="Maven: io.reactivex.rxjava2:rxjava:2.2.15" level="project" />
     <orderEntry type="library" name="Maven: org.reactivestreams:reactive-streams:1.0.3" level="project" />
     <orderEntry type="module" module-name="TangORB" />
-    <orderEntry type="module" module-name="jacorb" />
-    <orderEntry type="library" name="Maven: org.jacorb:jacorb-services:3.10-SNAPSHOT" level="project" />
+    <orderEntry type="library" name="Maven: org.jacorb:jacorb:3.9" level="project" />
+    <orderEntry type="library" name="Maven: org.jacorb:jacorb-services:3.9" level="project" />
     <orderEntry type="library" name="Maven: antlr:antlr:2.7.2" level="project" />
     <orderEntry type="library" name="Maven: mx4j:mx4j:3.0.1" level="project" />
     <orderEntry type="library" name="Maven: nanocontainer:nanocontainer-remoting:1.0-RC-1" level="project" />

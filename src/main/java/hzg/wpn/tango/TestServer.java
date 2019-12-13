@@ -1,6 +1,7 @@
 package hzg.wpn.tango;
 
 import fr.esrf.Tango.DevFailed;
+import fr.esrf.TangoApi.DevicePipe;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.tango.DeviceState;
@@ -19,6 +20,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
+import java.util.Optional;
 import java.util.Random;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
@@ -43,7 +45,7 @@ public class TestServer {
 
     @DeviceManagement
     private DeviceManager deviceManager;
-    @State(isPolled = true)
+    @State(isPolled = true, pollingPeriod = 3000)
     private DeviceState state;
     @Status(isPolled = true)
     private String status;
@@ -275,13 +277,36 @@ public class TestServer {
     private final ThreadLocal<String> clientMainClass = new ThreadLocal<>();
     private final ConcurrentMap<String, AtomicLong> clientReqId = new ConcurrentHashMap<>();
 
+    @Command
+    public void throwExceptionCommand(){
+        throw new RuntimeException();
+    }
+
+    @Attribute
+    public double getThrowExceptionAttribute(){
+        throw new RuntimeException();
+    }
+
+    @Pipe
+    public DevicePipe getThrowExceptionPipe(){
+        throw new RuntimeException();
+    }
+
     @AroundInvoke
     public void aroundInvoke(InvocationContext ctx){
-        String clientMainClass = ctx.getClientID().java_clnt().MainClass;
+        String clientMainClass = Optional.ofNullable(ctx.getClientHostName()).orElse("polling");
+
         this.clientMainClass.set(
                 clientMainClass);
         clientReqId.putIfAbsent(clientMainClass, new AtomicLong(0L));
     }
+
+    @Command
+    public void pushStateStatus() throws DevFailed {
+        deviceManager.pushEvent("state",new AttributeValue(getState()), EventType.CHANGE_EVENT);
+        deviceManager.pushEvent("status",new AttributeValue(getStatus()), EventType.CHANGE_EVENT);
+    }
+
 
     @Command
     public void resetReqId(){
