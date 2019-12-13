@@ -47,7 +47,7 @@ public class TestServer {
     private DeviceManager deviceManager;
     @State(isPolled = true, pollingPeriod = 3000)
     private DeviceState state;
-    @Status(isPolled = true)
+    @Status
     private String status;
     private FutureTask<Void> register13Task;
     private SensorSizePx sensorSizePx = SensorSizePx._16P;
