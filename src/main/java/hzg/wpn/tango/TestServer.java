@@ -47,7 +47,7 @@ public class TestServer {
     private DeviceManager deviceManager;
     @State(isPolled = true, pollingPeriod = 3000)
     private DeviceState state;
-    @Status
+    @Status(isPolled = true, pollingPeriod = 3000)
     private String status;
     private FutureTask<Void> register13Task;
     private SensorSizePx sensorSizePx = SensorSizePx._16P;
@@ -303,8 +303,12 @@ public class TestServer {
 
     @Command
     public void pushStateStatus() throws DevFailed {
-        deviceManager.pushEvent("state",new AttributeValue(getState()), EventType.CHANGE_EVENT);
-        deviceManager.pushEvent("status",new AttributeValue(getStatus()), EventType.CHANGE_EVENT);
+        setState(DeviceState.ON);
+        deviceManager.pushStateChangeEvent();//ON
+        deviceManager.pushStateChangeEvent(DeviceState.RUNNING);
+        deviceManager.pushStateChangeEvent();//RUNNING
+        deviceManager.pushStatusChangeEvent();//RUNNING
+        deviceManager.pushStatusChangeEvent("Oh my!");
     }
 
 

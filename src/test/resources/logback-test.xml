@@ -9,10 +9,10 @@
 
     <logger name="org.jacorb" level="ERROR"/>
     <logger name="net.sf.ehcache" level="ERROR"/>
-    <logger name="org.tango" level="ERROR"/>
+    <logger name="org.tango" level="DEBUG"/>
     <logger name="org.tango.server.events" level="DEBUG"/>
-    <logger name="hzg.wpn.tango" level="ERROR"/>
-    <root level="ERROR">
+    <logger name="hzg.wpn.tango" level="DEBUG"/>
+    <root level="DEBUG">
         <appender-ref ref="CONSOLE"/>
     </root>
 </configuration>
